@@ -1,0 +1,37 @@
+#! /bin/sh
+# Run this script to add a new user
+
+program=$0
+
+if [ $# != 2 ]; then
+        echo usage: ${program} "<user_name> <user_group>"
+        exit 1
+fi
+
+username=$1
+usergroup=$2
+homedir=/nfs/s2/userhome/${username}
+workingdir=/nfs/h1/workingshop/${username}
+bashrcfile=/usr/local/neurosoft/labtool/config_files/bashrc
+matlabconfig=/usr/local/neurosoft/labtool/config_files/startup.m
+vncconfig=/usr/local/neurosoft/labtool/config_files/xstartup
+
+useradd -d ${homedir} -g ${usergroup} -G ftpuser ${username} -s /bin/bash
+mkdir ${workingdir}
+chown ${username}:${usergroup} ${workingdir}
+chmod 700 ${workingdir}
+cd ${homedir}
+mv .bashrc .bashrc_bak
+cp ${bashrcfile} .bashrc
+chown ${username}:${usergroup} .bashrc
+mkdir .vnc
+cp ${vncconfig} .vnc
+chown -R ${username}:${usergroup} .vnc
+mkdir matlab
+cp ${matlabconfig} matlab
+chown -R ${username}:${usergroup} matlab
+su ${username} -c cd;ln -s ${workingdir} workingdir
+passwd ${username}
+smbpasswd -a {username}
+/usr/lib/yp/ypinit -m
+

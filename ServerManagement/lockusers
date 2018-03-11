@@ -1,0 +1,9 @@
+#! /bin/bash
+
+export UIDLIMIT=500
+USERS=`awk -v LIMIT=$UIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd | cut -d: -f1`
+
+for user in $USERS;
+    do usermod -L $user;
+    echo "done: lock $user";
+done;
