@@ -1,0 +1,3 @@
+#! /bin/bash
+# clean items created 90 days ago under the swap directory
+find /nfs/h1/workingshop/swap -maxdepth 1 -ctime +90 |xargs rm -rfv

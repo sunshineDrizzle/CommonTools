@@ -1,0 +1,9 @@
+#! /bin/bash
+# Kill all users' process at local host, but not include root.
+
+all_users=`who -q |head -n1 |xargs -n1 |sort -u |grep -v root`
+for user in $all_users
+do
+    echo "killing user----$user"
+    killall -u $user
+done
