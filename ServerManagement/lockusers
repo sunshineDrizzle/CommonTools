@@ -1,5 +1,6 @@
 #! /bin/bash
 
+# lock users whose UID larger than 'UIDLIMIT'
 export UIDLIMIT=500
 USERS=`awk -v LIMIT=$UIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd | cut -d: -f1`
 
