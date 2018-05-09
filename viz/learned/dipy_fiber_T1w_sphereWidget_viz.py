@@ -1,101 +1,18 @@
 # thanks for Dipy!!!
 # references:
-# 1. https://lorensen.github.io/VTKExamples/site/Cxx/Interaction/PointPicker/
-# 2. http://nipy.org/dipy/examples_built/viz_advanced.html#example-viz-advanced
-# 3. https://www.paraview.org/Wiki/VTK/Examples/Python/Widgets/SphereWidget
+# 1. http://nipy.org/dipy/examples_built/viz_advanced.html#example-viz-advanced
+# 2. https://www.paraview.org/Wiki/VTK/Examples/Python/Widgets/SphereWidget
 
 import vtk
 import numpy as np
 import nibabel as nib
 
 from dipy.viz import actor, window, ui, interactor
-from dipy.viz.interactor import CustomInteractorStyle
 
 
-class MouseInteractorStylePP(interactor.CustomInteractorStyle):
-    def __init__(self, renderer, actors):
-        interactor.CustomInteractorStyle.__init__(self)
-        # super(MouseInteractorStylePP, self).__init__()
-
-        # Remember data we need for the interaction
-        self.peaker = vtk.vtkPointPicker()
-        self.renderer = renderer
-        self.chosenActor = None
-        self.actors = actors
-
-    def OnRightButtonUp(self, obj, eventType):
-        # When the right button is released, we stop the interaction
-        self.chosenActor = None
-
-        # Call parent interaction
-        # super(MouseInteractorStylePP, self).on_right_button_up(obj, eventType)
-        interactor.CustomInteractorStyle.on_right_button_up(self, obj, eventType)
-
-    def OnRightButtonDown(self, obj, eventType):
-        # The rightbutton can be used to pick up the actor.
-
-        # Get the display mouse event position
-        screen_pos = self.GetInteractor().GetEventPosition()
-
-        # Use a picker to see which actor is under the mouse
-        # self.GetInteractor().GetPicker().Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
-        # actor = self.GetInteractor().GetPicker().GetActor()
-        self.picker.Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
-        actor = self.picker.GetActor()
-
-        # Is this a actor that we should interact with?
-        if actor in self.actors:
-            # Yes! Remember it.
-            self.chosenActor = actor
-            # self.world_pos = self.GetInteractor().GetPicker().GetPickPosition()
-            self.world_pos = self.picker.GetPickPosition()
-
-        # Call parent interaction
-        # super(MouseInteractorStylePP, self).on_right_button_down(obj, eventType)
-        interactor.CustomInteractorStyle.on_right_button_down(self, obj, eventType)
-
-    def OnMouseMove(self, obj, eventType):
-        # Translate a choosen actor
-        if self.chosenActor is not None:
-            # Redo the same calculation as during OnRightButtonDown
-            screen_pos = self.GetInteractor().GetEventPosition()
-            # self.GetInteractor().GetPicker().Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
-            # actor_new = self.GetInteractor().GetPicker().GetActor()
-            self.picker.Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
-            actor_new = self.picker.GetActor()
-            # if actor_new is not self.chosenActor:
-            #     return None
-            # world_pos_new = self.GetInteractor().GetPicker().GetPickPosition()
-            world_pos_new = self.picker.GetPickPosition()
-
-            # Calculate the xy movement
-            dx = world_pos_new[0] - self.world_pos[0]
-            dy = world_pos_new[1] - self.world_pos[1]
-            dz = world_pos_new[2] - self.world_pos[2]
-
-            # Remember the new reference coordinate
-            self.world_pos = world_pos_new
-
-            # Shift the choosen actor in the xy plane
-            x, y, z = self.chosenActor.GetPosition()
-            self.chosenActor.SetPosition(x + dx, y + dy, z + dz)
-
-            # Request a redraw
-            self.GetInteractor().GetRenderWindow().Render()
-            # self.renWin.Render()
-        else:
-            # super(MouseInteractorStylePP, self).on_mouse_move(obj, eventType)
-            interactor.CustomInteractorStyle.on_mouse_move(self, obj, eventType)
-
-    def SetInteractor(self, interactor):
-        CustomInteractorStyle.SetInteractor(self, interactor)
-        # The following three events are involved in the actors interaction.
-        self.RemoveObservers('RightButtonPressEvent')
-        self.RemoveObservers('RightButtonReleaseEvent')
-        self.RemoveObservers('MouseMoveEvent')
-        self.AddObserver('RightButtonPressEvent', self.OnRightButtonDown)
-        self.AddObserver('RightButtonReleaseEvent', self.OnRightButtonUp)
-        self.AddObserver('MouseMoveEvent', self.OnMouseMove)
+# Call back function
+def sphereCallback(obj, event):
+    print('Center: {}, {}, {}'.format(*obj.GetCenter()))
 
 
 tck_file = nib.streamlines.load('../data/1M_20_01_20dynamic250_SD_Stream_occipital5.tck')
@@ -136,24 +53,19 @@ image_actor_y.display_extent(0,
                              0,
                              shape[2] - 1)
 
-# ---create sphere---
-sphere_src = vtk.vtkSphereSource()
-sphere_src.SetCenter(0, 0, 0)
-sphere_src.SetRadius(5.0)
-
-sphere_mapper = vtk.vtkPolyDataMapper()
-sphere_mapper.SetInputConnection(sphere_src.GetOutputPort())
-
-sphere_actor = vtk.vtkActor()
-sphere_actor.SetMapper(sphere_mapper)
-
 ren.add(stream_actor)
+ren.add(image_actor_z)
 ren.add(image_actor_x)
 ren.add(image_actor_y)
-ren.add(image_actor_z)
-ren.add(sphere_actor)
-
-show_m = window.ShowManager(ren, size=(1200, 900), interactor_style=MouseInteractorStylePP(ren, [sphere_actor]))
+show_m = window.ShowManager(ren, size=(1200, 900))
+# A Sphere widget
+sphereWidget = vtk.vtkSphereWidget()
+sphereWidget.SetRadius(5)
+sphereWidget.SetInteractor(show_m.iren)
+sphereWidget.SetRepresentationToSurface()
+sphereWidget.On()
+# Connect the event to a function
+sphereWidget.AddObserver("InteractionEvent", sphereCallback)
 show_m.initialize()
 
 # create sliders to move the slices and change their opacity
