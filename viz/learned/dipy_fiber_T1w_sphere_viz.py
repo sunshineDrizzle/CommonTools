@@ -2,7 +2,6 @@
 # references:
 # 1. https://lorensen.github.io/VTKExamples/site/Cxx/Interaction/PointPicker/
 # 2. http://nipy.org/dipy/examples_built/viz_advanced.html#example-viz-advanced
-# 3. https://www.paraview.org/Wiki/VTK/Examples/Python/Widgets/SphereWidget
 
 import vtk
 import numpy as np
@@ -12,9 +11,9 @@ from dipy.viz import actor, window, ui, interactor
 from dipy.viz.interactor import CustomInteractorStyle
 
 
-class MouseInteractorStylePP(interactor.CustomInteractorStyle):
+class MouseInteractorStylePP(CustomInteractorStyle):
     def __init__(self, renderer, actors):
-        interactor.CustomInteractorStyle.__init__(self)
+        CustomInteractorStyle.__init__(self)
         # super(MouseInteractorStylePP, self).__init__()
 
         # Remember data we need for the interaction
@@ -29,7 +28,7 @@ class MouseInteractorStylePP(interactor.CustomInteractorStyle):
 
         # Call parent interaction
         # super(MouseInteractorStylePP, self).on_right_button_up(obj, eventType)
-        interactor.CustomInteractorStyle.on_right_button_up(self, obj, eventType)
+        CustomInteractorStyle.on_right_button_up(self, obj, eventType)
 
     def OnRightButtonDown(self, obj, eventType):
         # The rightbutton can be used to pick up the actor.
@@ -52,7 +51,7 @@ class MouseInteractorStylePP(interactor.CustomInteractorStyle):
 
         # Call parent interaction
         # super(MouseInteractorStylePP, self).on_right_button_down(obj, eventType)
-        interactor.CustomInteractorStyle.on_right_button_down(self, obj, eventType)
+        CustomInteractorStyle.on_right_button_down(self, obj, eventType)
 
     def OnMouseMove(self, obj, eventType):
         # Translate a choosen actor
@@ -63,6 +62,7 @@ class MouseInteractorStylePP(interactor.CustomInteractorStyle):
             # actor_new = self.GetInteractor().GetPicker().GetActor()
             self.picker.Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
             actor_new = self.picker.GetActor()
+            print(actor_new)
             # if actor_new is not self.chosenActor:
             #     return None
             # world_pos_new = self.GetInteractor().GetPicker().GetPickPosition()
@@ -85,7 +85,7 @@ class MouseInteractorStylePP(interactor.CustomInteractorStyle):
             # self.renWin.Render()
         else:
             # super(MouseInteractorStylePP, self).on_mouse_move(obj, eventType)
-            interactor.CustomInteractorStyle.on_mouse_move(self, obj, eventType)
+            CustomInteractorStyle.on_mouse_move(self, obj, eventType)
 
     def SetInteractor(self, interactor):
         CustomInteractorStyle.SetInteractor(self, interactor)
