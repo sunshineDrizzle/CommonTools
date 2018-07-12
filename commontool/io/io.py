@@ -12,8 +12,18 @@ class CiftiReader(object):
         return self.full_data.header
 
     def get_data(self, structure=None, zeroize=False):
+        """
+        get data from cifti file
 
-        _data = self.full_data.get_data()
+        :param structure: str
+            specify which brain structure's data should be extracted
+            If None, get all structures, meanwhile ignore parameter 'zeroize'.
+        :param zeroize: bool
+            If true, get data after filling zeros for the missing vertices.
+        :return: data: numpy array
+        """
+
+        _data = np.array(self.full_data.get_data())
         if structure is not None:
             try:
                 brain_model = [i for i in self.header.get_index_map(1).brain_models
