@@ -148,6 +148,7 @@ def save2cifti(file_path, data, brain_models, map_names=None, volume=None, label
         NOTE!!!!!!
             The result is a Nifti2Image instead of Cifti2Image, when nibabel-2.2.1 is used.
             Nibabel-2.3.0 can support for Cifti2Image indeed.
+            And the header will be regard as Nifti2Header when loading cifti file by nibabel earlier than 2.3.0.
 
         Parameters:
         ----------
@@ -212,21 +213,21 @@ class GiftiReader(object):
 
     @property
     def coords(self):
-        if self._fpath.endswith('surf.gii'):
+        if self._fpath.endswith('.surf.gii'):
             return self.full_data.darrays[0].data
         else:
             return None
 
     @property
     def faces(self):
-        if self._fpath.endswith('surf.gii'):
+        if self._fpath.endswith('.surf.gii'):
             return self.full_data.darrays[1].data
         else:
             return None
 
     @property
     def scalar_data(self):
-        if self._fpath.endswith('surf.gii'):
+        if self._fpath.endswith('.surf.gii'):
             return None
         else:
             return self.full_data.darrays[0].data
