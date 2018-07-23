@@ -11,7 +11,7 @@ def main():
                         metavar='filler_file',
                         nargs='+',
                         dest='filler_files',
-                        help="    Each filler file works on its corresponding placeholder-{} in the command "
+                        help="    Each filler file works on its corresponding placeholder {} in the command "
                              "specified by the argument '-c'. And there is an one-to-one correspondence in order "
                              "between filler files and placeholders.\n    For each file, the number of lines means "
                              "the number of executions of the command. And each line is used to fill corresponding "
@@ -23,8 +23,10 @@ def main():
                         nargs='+',
                         required=True,
                         dest='cmd',
-                        help="    Type any command as usual behind the argument. Specifically, use placeholders-{} "
-                             "to specify places that will be filled by corresponding filler files.")
+                        help="    Type any command as usual behind the argument. Specifically, use placeholders {} "
+                             "to specify places that will be filled by corresponding filler files.\n    NOTE: If the "
+                             "command contains stud - or double stud --, make sure to use a pair of "
+                             "single quotation marks or double quotation marks to declare it is a entire command.")
     args = parser.parse_args()
 
     # acquire command
