@@ -1,0 +1,65 @@
+#! /usr/bin/env python
+
+import os
+import argparse
+
+
+def main():
+    """Main entrance for batch processing of shell commands."""
+    parser = argparse.ArgumentParser(description='batch processing of shell commands')
+    parser.add_argument('-f', '--filler',
+                        metavar='filler_file',
+                        nargs='+',
+                        dest='filler_files',
+                        help="    Each filler file works on its corresponding placeholder-{} in the command "
+                             "specified by the argument '-c'. And there is an one-to-one correspondence in order "
+                             "between filler files and placeholders.\n    For each file, the number of lines means "
+                             "the number of executions of the command. And each line is used to fill corresponding "
+                             "placeholder at its corresponding execution.\n    In order to be comprehensible for "
+                             "users, all filler files must have the same amount of lines.\n    NOTE: All empty lines "
+                             "will be ignored!")
+    parser.add_argument('-c', '--command',
+                        metavar='str',
+                        nargs='+',
+                        required=True,
+                        dest='cmd',
+                        help="    Type any command as usual behind the argument. Specifically, use placeholders-{} "
+                             "to specify places that will be filled by corresponding filler files.")
+    args = parser.parse_args()
+
+    # acquire command
+    cmd = ' '.join(args.cmd)
+
+    if args.filler_files is not None:
+        # acquire fillers
+        filler_mat = []
+        for fname in args.filler_files:
+            with open(fname) as f:
+                filler = f.read().split('\n')
+                while '' in filler:
+                    # All empty lines will be ignored.
+                    filler.remove('')
+                filler_mat.append(filler)
+
+        # check the amount of lines
+        n_lines = [len(filler) for filler in filler_mat]
+        assert max(n_lines) == min(n_lines), "All filler files must have the same amount of lines."
+
+        # check if the number of filler files is same as the number of placeholders
+        assert len(filler_mat) == len(cmd.split('{}')) - 1, "The number of filler files should " \
+                                                            "be same as the number of placeholders."
+
+        for curr_fillers in zip(*filler_mat):
+            # Current execution uses current fillers and command.
+            curr_cmd = cmd.format(*curr_fillers)
+            print('running: ', curr_cmd)
+            os.system(curr_cmd)
+            print('done')
+    else:
+        print('running: ', cmd)
+        os.system(cmd)
+        print('done')
+
+
+if __name__ == '__main__':
+    main()
