@@ -16,22 +16,21 @@ bashrcfile=/usr/local/neurosoft/labtool/config_files/bashrc
 matlabconfig=/usr/local/neurosoft/labtool/config_files/startup.m
 vncconfig=/usr/local/neurosoft/labtool/config_files/xstartup
 
-useradd -d ${homedir} -g ${usergroup} -G ftpuser ${username} -s /bin/bash
+useradd -md ${homedir} -g ${usergroup} -G ftpuser ${username} -s /bin/bash
+chmod 700 ${homedir}
 mkdir ${workingdir}
 chown ${username}:${usergroup} ${workingdir}
 chmod 700 ${workingdir}
 cd ${homedir}
 mv .bashrc .bashrc_bak
 cp ${bashrcfile} .bashrc
-chown ${username}:${usergroup} .bashrc
 mkdir .vnc
 cp ${vncconfig} .vnc
-chown -R ${username}:${usergroup} .vnc
 mkdir matlab
 cp ${matlabconfig} matlab
-chown -R ${username}:${usergroup} matlab
-su ${username} -c cd;ln -s ${workingdir} workingdir
+ln -s ${workingdir} workingdir
+chown -R ${username}:${usergroup} ${homedir}
 passwd ${username}
-smbpasswd -a {username}
+smbpasswd -a ${username}
 /usr/lib/yp/ypinit -m
 
