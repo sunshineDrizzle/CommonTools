@@ -195,7 +195,8 @@ def save2cifti(file_path, data, brain_models, map_names=None, volume=None, label
         mat_idx_map1 = cifti2.Cifti2MatrixIndicesMap([1], 'CIFTI_INDEX_TYPE_BRAIN_MODELS')
         for bm in brain_models:
             mat_idx_map1.append(bm)
-        mat_idx_map1.append(volume)
+        if volume is not None:
+            mat_idx_map1.append(volume)
 
         matrix = cifti2.Cifti2Matrix()
         matrix.append(mat_idx_map0)
