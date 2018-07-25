@@ -99,3 +99,28 @@ def get_n_ring_neighbor(faces, n=1, ordinal=False, mask=None):
         return n_th_ring_neighbors
     else:
         return n_ring_neighbors
+
+
+def average_gradient(data, edge_list):
+    """
+    Calculate a average gradient map for scalar data on a mesh.
+
+    Parameters:
+    ----------
+    data: numpy array with shape (#vertices,)
+        The indices are vertices of a mesh.
+        The elements are values on the vertices.
+    edge_list: list
+        The indices are vertices of a mesh.
+        One index's corresponding element is a collection of vertices which connect to the index.
+
+    Return:
+    ------
+    avg_gradient: numpy array with shape (#vertices,)
+        The indices are vertices of a mesh.
+        The elements are average gradient on the vertices.
+    """
+    avg_gradient = np.zeros_like(data)
+    for vtx in range(data.shape[0]):
+        avg_gradient[vtx] = np.mean([abs(data[vtx] - data[neighbor]) for neighbor in edge_list[vtx]])
+    return avg_gradient
