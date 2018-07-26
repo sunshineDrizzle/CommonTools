@@ -232,3 +232,18 @@ class GiftiReader(object):
             return None
         else:
             return self.full_data.darrays[0].data
+
+
+def save2nifti(fpath, data, header=None):
+    """
+    Save to a nifti file.
+
+    Parameters
+    ----------
+    fpath: str
+        The file path to output
+    data: numpy array
+    header: Nifti2Header
+    """
+    img = nib.Nifti2Image(data, None, header=header)
+    nib.nifti1.save(img, fpath)
