@@ -1,7 +1,7 @@
 import numpy as np
 
+from ..triangular_mesh import get_n_ring_neighbor, average_gradient, mesh2graph
 from ...io.io import GiftiReader, CiftiReader, save2cifti
-from ..triangular_mesh import get_n_ring_neighbor, average_gradient
 
 
 def test_average_gradient():
@@ -40,5 +40,23 @@ def test_average_gradient():
                gradient_data, bm_lr, ['surface face-avg gradient'])
 
 
-if __name__ == '__main__':
-    test_average_gradient()
+def test_mesh2graph():
+    """By the way, test the https://python-louvain.readthedocs.io/en/latest/"""
+    import community
+    from froi.io.io import save2nifti
+
+    faces = GiftiReader(r'E:\useful_things\data\HCP\HCP_S1200_GroupAvg_v1\HCP_S1200_GroupAvg_v1'
+                        r'\S1200.R.very_inflated_MSMAll.32k_fs_LR.surf.gii').faces
+    reader = CiftiReader(r'E:\useful_things\data\HCP\HCP_S1200_GroupAvg_v1'
+                         r'\HCP_S1200_997_tfMRI_FACE-AVG_level2_cohensd_hp200_s'
+                         r'4_MSMAll.dscalar.nii')
+    data = reader.get_data('CIFTI_STRUCTURE_CORTEX_RIGHT', True)
+    mask = data.ravel() >= 0.2
+    graph = mesh2graph(faces, mask=mask, vtx_signal=data.T, weight_normalization=True)
+    partition = community.best_partition(graph)
+
+    labeled_data = np.zeros(data.shape[1])
+    for vtx, label in partition.items():
+        labeled_data[vtx] = label + 1
+
+    save2nifti(r'E:\tmp\face-avg_community_thr0.2.nii.gz', labeled_data)

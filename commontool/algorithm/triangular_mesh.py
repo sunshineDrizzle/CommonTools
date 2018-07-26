@@ -1,5 +1,8 @@
 import numpy as np
 from scipy import sparse
+from scipy.spatial.distance import pdist
+from scipy.stats import pearsonr
+from networkx import Graph
 
 
 def mesh_edges(faces):
@@ -44,7 +47,8 @@ def get_n_ring_neighbor(faces, n=1, ordinal=False, mask=None):
         True: get the n_th ring neighbor
         False: get the n ring neighbor
     mask : 1-D numpy array
-        specify a area where the ROI is in.
+        specify a area where the ROI is
+        non-ROI element's value is zero
     Returns
     -------
     lists
@@ -101,7 +105,172 @@ def get_n_ring_neighbor(faces, n=1, ordinal=False, mask=None):
         return n_ring_neighbors
 
 
-def average_gradient(data, edge_list):
+def mesh2edge_list(faces, n=1, ordinal=False, mask=None, vtx_signal=None,
+                   weight_type=('dissimilar', 'euclidean'), weight_normalization=False):
+    """
+    get edge_list according to mesh's geometry and vtx_signal
+    The edge_list can be used to create graph or adjacent matrix
+
+    Parameters
+    ----------
+    faces : a array with shape (n_triangles, 3)
+    n : integer
+        specify which ring should be got
+    ordinal : bool
+        True: get the n_th ring neighbor
+        False: get the n ring neighbor
+    mask : 1-D numpy array
+        specify a area where the ROI is
+        non-ROI element's value is zero
+    vtx_signal : numpy array
+        NxM array, N is the number of vertices,
+        M is the number of measurements and time points.
+    weight_type : (str1, str2)
+        The rule used for calculating weights
+        such as ('dissimilar', 'euclidean') and ('similar', 'pearson correlation')
+    weight_normalization : bool
+        If it is False, do nothing.
+        If it is True, normalize weights to [0, 1].
+            After doing this, greater the weight is, two vertices of the edge are more related.
+
+    Returns
+    -------
+    row_ind : list
+        row indices of edges
+    col_ind : list
+        column indices of edges
+    edge_data : list
+        edge data of the edges-zip(row_ind, col_ind)
+    """
+    n_ring_neighbors = get_n_ring_neighbor(faces, n, ordinal, mask)
+
+    row_ind = [i for i, neighbors in enumerate(n_ring_neighbors) for v_id in neighbors]
+    col_ind = [v_id for neighbors in n_ring_neighbors for v_id in neighbors]
+    if vtx_signal is None:
+        # create unweighted edges
+        n_edge = len(row_ind)  # the number of edges
+        edge_data = np.ones(n_edge)
+    else:
+        # calculate weights according to mesh's geometry and vertices' signal
+        if weight_type[0] == 'dissimilar':
+            edge_data = [pdist(np.c_[vtx_signal[i], vtx_signal[j]].T,
+                               metric=weight_type[1])[0] for i, j in zip(row_ind, col_ind)]
+
+            if weight_normalization:
+                max_dissimilar = np.max(edge_data)
+                min_dissimilar = np.min(edge_data)
+                edge_data = [(max_dissimilar-dist)/(max_dissimilar-min_dissimilar) for dist in edge_data]
+
+        elif weight_type[0] == 'similar':
+            if weight_type[1] == 'pearson correlation':
+                edge_data = [pearsonr(vtx_signal[i], vtx_signal[j])[0] for i, j in zip(row_ind, col_ind)]
+            else:
+                raise TypeError("The weight_type-{} is not supported now!".format(weight_type))
+
+            if weight_normalization:
+                max_similar = np.max(edge_data)
+                min_similar = np.min(edge_data)
+                edge_data = [(simi-min_similar)/(max_similar-min_similar) for simi in edge_data]
+
+        else:
+            raise TypeError("The weight_type-{} is not supported now!".format(weight_type))
+
+    return row_ind, col_ind, edge_data
+
+
+def mesh2adjacent_matrix(faces, n=1, ordinal=False, mask=None, vtx_signal=None,
+                         weight_type=('dissimilar', 'euclidean'), weight_normalization=False):
+    """
+    get adjacent matrix according to mesh's geometry and vtx_signal
+
+    Parameters
+    ----------
+    faces : a array with shape (n_triangles, 3)
+    n : integer
+        specify which ring should be got
+    ordinal : bool
+        True: get the n_th ring neighbor
+        False: get the n ring neighbor
+    mask : 1-D numpy array
+        specify a area where the ROI is
+        non-ROI element's value is zero
+    vtx_signal : numpy array
+        NxM array, N is the number of vertices,
+        M is the number of measurements and time points.
+    weight_type : (str1, str2)
+        The rule used for calculating weights
+        such as ('dissimilar', 'euclidean') and ('similar', 'pearson correlation')
+    weight_normalization : bool
+        If it is False, do nothing.
+        If it is True, normalize weights to [0, 1].
+            After doing this, greater the weight is, two vertices of the edge are more related.
+
+    Returns
+    -------
+    adjacent_matrix : coo matrix
+    """
+    n_vtx = np.max(faces) + 1
+    row_ind, col_ind, edge_data = mesh2edge_list(faces, n, ordinal, mask, vtx_signal,
+                                                 weight_type, weight_normalization)
+    adjacent_matrix = sparse.coo_matrix((edge_data, (row_ind, col_ind)), (n_vtx, n_vtx))
+
+    return adjacent_matrix
+
+
+def mesh2graph(faces, n=1, ordinal=False, mask=None, vtx_signal=None,
+               weight_type=('dissimilar', 'euclidean'), weight_normalization=True):
+    """
+    create graph according to mesh's geometry and vtx_signal
+
+    Parameters
+    ----------
+    faces : a array with shape (n_triangles, 3)
+    n : integer
+        specify which ring should be got
+    ordinal : bool
+        True: get the n_th ring neighbor
+        False: get the n ring neighbor
+    mask : 1-D numpy array
+        specify a area where the ROI is
+        non-ROI element's value is zero
+    vtx_signal : numpy array
+        NxM array, N is the number of vertices,
+        M is the number of measurements and time points.
+    weight_type : (str1, str2)
+        The rule used for calculating weights
+        such as ('dissimilar', 'euclidean') and ('similar', 'pearson correlation')
+    weight_normalization : bool
+        If it is False, do nothing.
+        If it is True, normalize weights to [0, 1].
+            After doing this, greater the weight is, two vertices of the edge are more related.
+
+    Returns
+    -------
+    graph : nx.Graph
+    """
+    row_ind, col_ind, edge_data = mesh2edge_list(faces, n, ordinal, mask, vtx_signal,
+                                                 weight_type, weight_normalization)
+    graph = Graph()
+    # Actually, add_weighted_edges_from is only used to add edges. If we intend to create graph by the method only,
+    # all of the graph's nodes must have at least one edge. However, maybe some special graphs contain nodes
+    # which have no edge connected. So we need add extra nodes.
+    if mask is None:
+        n_vtx = np.max(faces) + 1
+        graph.add_nodes_from(range(n_vtx))
+    else:
+        vertices = np.nonzero(mask)[0]
+        graph.add_nodes_from(vertices)
+
+    # add_weighted_edges_from is faster than from_scipy_sparse_matrix and from_numpy_matrix
+    # add_weighted_edges_from is also faster than default constructor
+    # To get more related information, please refer to
+    # http://stackoverflow.com/questions/24681677/transform-csr-matrix-into-networkx-graph
+    graph.add_weighted_edges_from(zip(row_ind, col_ind, edge_data))
+
+    return graph
+
+
+def average_gradient(data, neighbors):
     """
     Calculate a average gradient map for scalar data on a mesh.
 
@@ -110,7 +279,7 @@ def average_gradient(data, edge_list):
     data: numpy array with shape (#vertices,)
         The indices are vertices of a mesh.
         The elements are values on the vertices.
-    edge_list: list
+    neighbors: list
         The indices are vertices of a mesh.
         One index's corresponding element is a collection of vertices which connect to the index.
 
@@ -122,5 +291,5 @@ def average_gradient(data, edge_list):
     """
     avg_gradient = np.zeros_like(data)
     for vtx in range(data.shape[0]):
-        avg_gradient[vtx] = np.mean([abs(data[vtx] - data[neighbor]) for neighbor in edge_list[vtx]])
+        avg_gradient[vtx] = np.mean([abs(data[vtx] - data[neighbor]) for neighbor in neighbors[vtx]])
     return avg_gradient
