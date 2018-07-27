@@ -50,7 +50,7 @@ def test_mesh2graph():
                          r'\HCP_S1200_997_tfMRI_FACE-AVG_level2_cohensd_hp200_s'
                          r'4_MSMAll.dscalar.nii')
     data = reader.get_data('CIFTI_STRUCTURE_CORTEX_RIGHT', True)
-    mask = data.ravel() >= 0.4
+    mask = data.ravel() > 0.4
     graph = mesh2graph(faces, mask=mask, vtx_signal=data.T, weight_normalization=True)
     partition = community.best_partition(graph)
 

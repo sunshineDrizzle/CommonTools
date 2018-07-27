@@ -157,8 +157,20 @@ def mesh2edge_list(faces, n=1, ordinal=False, mask=None, vtx_signal=None,
     else:
         # calculate weights according to mesh's geometry and vertices' signal
         if weight_type[0] == 'dissimilar':
-            edge_data = [pdist(np.c_[vtx_signal[i], vtx_signal[j]].T,
-                               metric=weight_type[1])[0] for i, j in zip(row_ind, col_ind)]
+            if weight_type[1] == 'euclidean':
+                edge_data = [pdist(vtx_signal[[i, j]], metric=weight_type[1])[0]
+                             for i, j in zip(row_ind, col_ind)]
+            elif weight_type[1] == 'relative_euclidean':
+                edge_data = []
+                for i, j in zip(row_ind, col_ind):
+                    euclidean = pdist(vtx_signal[[i, j]], metric='euclidean')[0]
+                    sum_ij = np.sum(abs(vtx_signal[[i, j]]))
+                    if sum_ij:
+                        edge_data.append(float(euclidean) / sum_ij)
+                    else:
+                        edge_data.append(0)
+            else:
+                raise RuntimeError("The weight_type-{} is not supported now!".format(weight_type))
 
             if weight_normalization:
                 max_dissimilar = np.max(edge_data)
@@ -168,8 +180,10 @@ def mesh2edge_list(faces, n=1, ordinal=False, mask=None, vtx_signal=None,
         elif weight_type[0] == 'similar':
             if weight_type[1] == 'pearson correlation':
                 edge_data = [pearsonr(vtx_signal[i], vtx_signal[j])[0] for i, j in zip(row_ind, col_ind)]
+            elif weight_type[1] == 'mean':
+                edge_data = [np.mean(vtx_signal[[i, j]]) for i, j in zip(row_ind, col_ind)]
             else:
-                raise TypeError("The weight_type-{} is not supported now!".format(weight_type))
+                raise RuntimeError("The weight_type-{} is not supported now!".format(weight_type))
 
             if weight_normalization:
                 max_similar = np.max(edge_data)
