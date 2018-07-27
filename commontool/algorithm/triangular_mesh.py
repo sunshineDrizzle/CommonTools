@@ -56,6 +56,10 @@ def get_n_ring_neighbor(faces, n=1, ordinal=False, mask=None):
         each element is a set which includes neighbors of corresponding vertex
     """
     n_vtx = np.max(faces) + 1  # get the number of vertices
+    if mask is not None and np.nonzero(mask)[0].shape[0] == n_vtx:
+        # In this case, the mask covers all vertices and is equal to have no mask (None).
+        # So the program reset it as a None that it will save the computational cost.
+        mask = None
 
     # find 1_ring neighbors' id for each vertex
     coo_w = mesh_edges(faces)
