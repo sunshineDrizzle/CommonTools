@@ -5,18 +5,26 @@ if __name__ == '__main__':
     import shutil
 
     filler_file0 = '/nfs/s2/userhome/chenxiayu/workingdir/test/tmp/sessid'
-    proj_par = '/nfs/s2/userhome/chenxiayu/workingdir/data'
-    file_in_proj = 'surface/{0}/obj.gfeat/cope1.feat/stats/rh_zstat1_1w_fracavg.mgz'
-    target_par = '/nfs/s2/userhome/chenxiayu/workingdir/test/tmp'
+    source_proj = '/nfs/s2/userhome/chenxiayu/workingdir/data/surface'
+    file_in_proj = '{0}/obj.gfeat/cope1.feat/stats/rh_zstat1_1w_fracavg.mgz'
+    target_proj = '/nfs/s2/userhome/chenxiayu/workingdir/test/tmp/surface'
+    all_in_one_dir = ''  # If all_in_one_dir is not empty, target_par is invalid.
 
     with open(filler_file0) as f0:
         filler0_list = f0.read().splitlines()
 
-    log_file = open('copy_of_interest_log', 'w+')
+    if all_in_one_dir:
+        log_file = open(os.path.join(all_in_one_dir, 'copy_of_interest_log'), 'w+')
+    else:
+        log_file = open(os.path.join(target_proj, 'copy_of_interest_log'), 'w+')
     for filler0 in filler0_list:
-        fpath = os.path.join(proj_par, file_in_proj.format(filler0))
-        target_path = os.path.join(target_par, file_in_proj.format(filler0))
-        target_dir = os.path.dirname(target_path)
+        fpath = os.path.join(source_proj, file_in_proj.format(filler0))
+        if not all_in_one_dir:
+            target_path = os.path.join(target_proj, file_in_proj.format(filler0))
+            target_dir = os.path.dirname(target_path)
+        else:
+            target_dir = all_in_one_dir
+            target_path = os.path.join(target_dir, filler0 + '_' + os.path.basename(file_in_proj))
 
         if not os.path.exists(fpath):
             message = 'Path-{0} does not exist!\n'.format(fpath)
