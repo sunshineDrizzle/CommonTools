@@ -26,6 +26,7 @@ def longest_same_seq_length(seq):
             break
     return max_count
 
+
 if __name__ == "__main__":
     print(longest_same_seq_length("122333444455555"))
     print(longest_same_seq_length(['a', 'b', 'b', 'c']))
