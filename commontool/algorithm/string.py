@@ -9,8 +9,9 @@ def _filling(string, fillers_list, fillers, strings):
     fillers_list: list
         Each element is a collection of fillers named fillers_c. Each fillers_c works on
         its corresponding placeholder {} in the 'string'. And there is an one-to-one
-        correspondence in order between fillers_c and placeholders. Fillers in these fillers_cs
-        are used to fill corresponding placeholders to generate strings we need.
+        correspondence in order between fillers_c and placeholders, which can also be specified
+        by position parameters. Fillers in these fillers_cs are used to fill corresponding placeholders
+        to generate strings we need.
         The number of generated string is equal to
         len(fillers_list[0]) * len(fillers_list[1]) * ... * len(fillers_list[-1])
     fillers: list
@@ -38,14 +39,12 @@ def get_strings_by_filling(string, fillers_list):
     fillers_list: list
         Each element is a collection of fillers named fillers_c. Each fillers_c works on
         its corresponding placeholder {} in the 'string'. And there is an one-to-one
-        correspondence in order between fillers_c and placeholders. Fillers in these fillers_cs
-        are used to fill corresponding placeholders to generate strings we need.
+        correspondence in order between fillers_c and placeholders, which can also be specified
+        by position parameters. Fillers in these fillers_cs are used to fill corresponding placeholders
+        to generate strings we need.
         The number of generated string is equal to
         len(fillers_list[0]) * len(fillers_list[1]) * ... * len(fillers_list[-1])
     """
-    n_placeholder = len(string.split('{}')) - 1
-    assert n_placeholder == len(fillers_list), "The number of placeholders must be equal to the number of fillers_cs"
-
     strings = []
     _filling(string, fillers_list, [], strings)
 
