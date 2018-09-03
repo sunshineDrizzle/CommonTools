@@ -1,20 +1,23 @@
 from matplotlib import pyplot as plt
 
 
-def show_bar_value(rects):
+def show_bar_value(rects, val_fmt=''):
     """
     show bars' value on the figure automatically
     Reference: https://stackoverflow.com/questions/14270391/python-matplotlib-multiple-bars
 
     :param rects:
         bars in the matplotlib ax
+    :param val_fmt: str
+        value format, used to control the value's visualization format
     """
     for rect in rects:
-        h = rect.get_height()
-        if h < 0:
-            plt.text(rect.get_x() + rect.get_width() / 2., h, str(h), ha='center', va='top')
+        value = rect.get_height()
+        label = '{0:{1}}'.format(value, val_fmt)
+        if value < 0:
+            plt.text(rect.get_x() + rect.get_width() / 2., value, label, ha='center', va='top')
         else:
-            plt.text(rect.get_x()+rect.get_width()/2., h, str(h), ha='center', va='bottom')
+            plt.text(rect.get_x()+rect.get_width()/2., value, label, ha='center', va='bottom')
 
 
 def auto_bar_width(x):

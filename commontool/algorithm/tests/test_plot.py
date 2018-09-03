@@ -15,8 +15,8 @@ def test_bar_plot():
     plt.xticks(x, x_ticks)
 
     x = np.arange(1)
-    y = [1]
+    y = [1.3241]
     width = auto_bar_width(x)
     plt.figure()
     rects = plt.bar(x, y, width, color='g')
-    show_bar_value(rects)
+    show_bar_value(rects, '.3f')
