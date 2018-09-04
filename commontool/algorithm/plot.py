@@ -20,20 +20,23 @@ def show_bar_value(rects, val_fmt=''):
             plt.text(rect.get_x()+rect.get_width()/2., value, label, ha='center', va='bottom')
 
 
-def auto_bar_width(x):
+def auto_bar_width(x, item_num=1):
     """
     decide bar width automatically according to the length and interval of x indices.
 
     :param x: 1-D sequence
         x indices in the matplotlib ax
+    :param item_num: integer
+        the number of items for plots
 
     :return width: float
         bar width
     """
     length = len(x)
+    bar_num = length * item_num
     if length > 1:
         interval = x[1] - x[0]
-        width = (length - 1) * interval / length
+        width = (length - 1.0) * interval / bar_num
     else:
         width = 0.1
 
