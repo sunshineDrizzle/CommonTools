@@ -234,16 +234,42 @@ class GiftiReader(object):
             return self.full_data.darrays[0].data
 
 
-def save2nifti(fpath, data, header=None):
+def save2nifti(fpath, data, affine=None, header=None):
     """
-    Save to a nifti file.
+    Save to a Nifti file.
 
     Parameters
     ----------
     fpath: str
         The file path to output
     data: numpy array
+    affine: numpy array
     header: Nifti2Header
     """
-    img = nib.Nifti2Image(data, None, header=header)
-    nib.nifti1.save(img, fpath)
+    img = nib.Nifti2Image(data, affine, header=header)
+    # Nifti1 standard uses a short int to represent the dimensions.
+    # As a result, it can only represent -32767~32767.
+    # Use Nifti2 standard can avoid this problem.
+    nib.nifti2.save(img, fpath)
+
+
+def save2mgh(fpath, data, affine=None, header=None):
+    """
+    Save to a MGH/MGZ file
+    The .mgh file format is used to store high-resolution structural data and
+    other data which are to be overlaid on the high-resolution structural volume.
+    A .mgz (or .mgh.gz) file is a .mgh file that has been compressed with ZLib.
+    NOTE!!! MGH file format seemingly has 3D dimensions at least. As a result, it essentially
+    regards the first dimensions as a volume and the forth dimension as the number of volumes.
+    References:
+        https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/MghFormat
+        http://nipy.org/nibabel/reference/nibabel.freesurfer.html#nibabel.freesurfer.mghformat.MGHImage
+
+    :param fpath: str
+        The file path to output. valid_exts = ('.mgh', '.mgz')
+    :param data: numpy array
+    :param affine: numpy array
+    :param header: MGHHeader
+    """
+    img = nib.MGHImage(data, affine, header=header)
+    nib.save(img, fpath)
