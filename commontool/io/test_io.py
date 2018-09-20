@@ -1,6 +1,6 @@
 import numpy as np
 
-from .io import CiftiReader, save2cifti
+from commontool.io.io import CiftiReader, save2cifti, CsvReader
 
 
 def test_cifti_io():
@@ -40,3 +40,12 @@ def test_merge_nifti2cifti():
 
     save2cifti(r'E:\tmp\vcAtlas_refine.dscalar.nii',
                cifti_data, bm_lr, ['surface vcAtlas'])
+
+
+def test_csv_io():
+    reader = CsvReader('../data/statistics.csv')
+    dict0 = reader.to_dict(keys=['#subjects'])
+    dict1 = reader.to_dict(1, keys=['2', '1'])
+
+    print(dict0)
+    print(dict1)

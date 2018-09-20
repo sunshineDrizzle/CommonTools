@@ -2,6 +2,7 @@ import nibabel as nib
 import numpy as np
 
 from nibabel.cifti2 import cifti2
+from collections import OrderedDict
 
 
 class CiftiReader(object):
@@ -273,3 +274,45 @@ def save2mgh(fpath, data, affine=None, header=None):
     """
     img = nib.MGHImage(data, affine, header=header)
     nib.save(img, fpath)
+
+
+class CsvReader(object):
+
+    def __init__(self, file_path):
+        with open(file_path) as rf:
+            lines = rf.read().splitlines()
+        self.rows = [line.split(',') for line in lines]
+        del lines
+        self.cols = list(map(list, zip(*self.rows)))
+
+    def to_dict(self, axis=0, keys=None):
+        """
+        transform contents of csv file to python dictionary
+
+        :param axis: 0 or 1
+            If 0, elements in the first row will be regard as keys. And the rest elements of one key's
+            corresponding column are collected into a list as the key's value.
+            elif 1, elements in the first column will be regard as keys. And the rest elements of one key's
+            corresponding row are collected into a list as the key's value.
+            else, error.
+        :param keys: sequence
+            if None, transform all contents.
+            else, just get contents whose keys are in 'keys'.
+
+        :return: csv_dict: OrderedDict
+        """
+        csv_dict = OrderedDict()
+        if axis == 0:
+            if keys is None:
+                keys = self.rows[0]
+            for key in keys:
+                csv_dict[key] = self.cols[self.rows[0].index(key)][1:]
+        elif axis == 1:
+            if keys is None:
+                keys = self.cols[0]
+            for key in keys:
+                csv_dict[key] = self.rows[self.cols[0].index(key)][1:]
+        else:
+            raise ValueError('axis must be 0 or 1')
+
+        return csv_dict
