@@ -1,3 +1,5 @@
+import numpy as np
+
 from matplotlib import pyplot as plt
 
 
@@ -41,3 +43,73 @@ def auto_bar_width(x, item_num=1):
         width = 0.1
 
     return width
+
+
+class VlineMover(object):
+    """
+    Move the vertical line when left button is clicked.
+    """
+
+    def __init__(self, vline, x_round=False):
+        """
+        :param vline: Matplotlib Line2D
+            the vertical line object
+        :param x_round: bool
+            If true, round the x index.
+        """
+        self.vline = vline
+        self.x_round = x_round
+        self.ax = vline.axes
+        self.x = vline.get_xdata()
+        self.y = vline.get_ydata()
+        self.cid = vline.figure.canvas.mpl_connect('button_press_event', self)
+
+    def __call__(self, event):
+        if event.button == 1 and event.inaxes is self.ax:
+            if self.x_round:
+                self.x = [round(event.xdata)] * 2
+            else:
+                self.x = [event.xdata] * 2
+            self.vline.set_data(self.x, self.y)
+            self.vline.figure.canvas.draw()
+
+
+class VlineMoverPlotter(object):
+    """
+    plot a figure with vertical line interaction
+    """
+
+    def __init__(self, nrows=1, ncols=1, sharex=False, sharey=False,
+                 squeese=True, subplot_kw=None, gridspec_kw=None, **fig_kw):
+
+        self.figure, self.axes = plt.subplots(nrows, ncols, sharex, sharey,
+                                              squeese, subplot_kw, gridspec_kw, **fig_kw)
+        if not isinstance(self.axes, np.ndarray):
+            self.axes = np.array([self.axes])
+        self.figure.canvas.mpl_connect('button_press_event', self._on_clicked)
+
+        self.vline_movers = np.zeros_like(self.axes)
+
+    def add_vline_mover(self, idx=0, r_idx=0, c_idx=0, vline_idx=0, x_round=False):
+        """
+        add vline mover for each ax
+
+        :param idx: integer
+            The index of the self.axes. (Only used when self.axes.ndim == 1)
+        :param r_idx: integer
+            The row index of the self.axes. (Only used when self.axes.ndim == 2)
+        :param c_idx: integer
+            The column index of the self.axes. (Only used when self.axes.ndim == 2)
+        :param vline_idx: integer
+            A index used to initialize the vertical line's position
+        :param x_round: bool
+            If true, round the x index.
+        :return:
+        """
+        if self.axes.ndim == 1:
+            self.vline_movers[idx] = VlineMover(self.axes[idx].axvline(vline_idx), x_round)
+        elif self.axes.ndim == 2:
+            self.vline_movers[r_idx, c_idx] = VlineMover(self.axes[r_idx, c_idx].axvline(vline_idx), x_round)
+
+    def _on_clicked(self, event):
+        pass

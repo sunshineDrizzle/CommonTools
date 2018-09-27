@@ -69,33 +69,3 @@ def calc_overlap(data1, data2, label1=None, label2=None, index='dice'):
     overlap = _overlap(data1, data2, index)
 
     return overlap
-
-
-# --------------matplotlib plot tools--------------
-class VlineMover(object):
-    """
-    Move the vertical line when left button is clicked.
-    """
-
-    def __init__(self, vline, x_round=False):
-        """
-        :param vline: Matplotlib Line2D
-            the vertical line object
-        :param x_round: bool
-            If true, round the x index
-        """
-        self.vline = vline
-        self.x_round = x_round
-        self.ax = vline.axes
-        self.x = vline.get_xdata()
-        self.y = vline.get_ydata()
-        self.cid = vline.figure.canvas.mpl_connect('button_press_event', self)
-
-    def __call__(self, event):
-        if event.button == 1 and event.inaxes is self.ax:
-            if self.x_round:
-                self.x = [round(event.xdata)] * 2
-            else:
-                self.x = [event.xdata] * 2
-            self.vline.set_data(self.x, self.y)
-            self.vline.figure.canvas.draw()
