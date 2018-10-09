@@ -88,7 +88,25 @@ class VlineMoverPlotter(object):
             self.axes = np.array([self.axes])
         self.figure.canvas.mpl_connect('button_press_event', self._on_clicked)
 
+        self.axes_twin = np.zeros_like(self.axes, dtype=np.object)
         self.vline_movers = np.zeros_like(self.axes)
+
+    def add_twinx(self, idx=0, r_idx=0, c_idx=0):
+        """
+        create and save twin axis for self.axes[idx] or self.axes[r_idx, c_idx]
+
+        :param idx: integer
+            The index of the self.axes. (Only used when self.axes.ndim == 1)
+        :param r_idx: integer
+            The row index of the self.axes. (Only used when self.axes.ndim == 2)
+        :param c_idx: integer
+            The column index of the self.axes. (Only used when self.axes.ndim == 2)
+        :return:
+        """
+        if self.axes.ndim == 1:
+            self.axes_twin[idx] = self.axes[idx].twinx()
+        elif self.axes.ndim == 2:
+            self.axes_twin[r_idx, c_idx] = self.axes[r_idx, c_idx].twinx()
 
     def add_vline_mover(self, idx=0, r_idx=0, c_idx=0, vline_idx=0, x_round=False):
         """
@@ -107,9 +125,15 @@ class VlineMoverPlotter(object):
         :return:
         """
         if self.axes.ndim == 1:
-            self.vline_movers[idx] = VlineMover(self.axes[idx].axvline(vline_idx), x_round)
+            if self.axes_twin[idx] is 0:
+                self.vline_movers[idx] = VlineMover(self.axes[idx].axvline(vline_idx), x_round)
+            else:
+                self.vline_movers[idx] = VlineMover(self.axes_twin[idx].axvline(vline_idx), x_round)
         elif self.axes.ndim == 2:
-            self.vline_movers[r_idx, c_idx] = VlineMover(self.axes[r_idx, c_idx].axvline(vline_idx), x_round)
+            if self.axes_twin[r_idx, c_idx] is 0:
+                self.vline_movers[r_idx, c_idx] = VlineMover(self.axes[r_idx, c_idx].axvline(vline_idx), x_round)
+            else:
+                self.vline_movers[r_idx, c_idx] = VlineMover(self.axes_twin[r_idx, c_idx].axvline(vline_idx), x_round)
 
     def _on_clicked(self, event):
         pass
