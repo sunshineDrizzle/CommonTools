@@ -16,7 +16,7 @@ def array2edge_list(array, weight_type=('dissimilar', 'euclidean'), weight_norma
         M is the length of each vertex's signal.
     weight_type : (str1, str2)
         The rule used for calculating weights
-        such as ('dissimilar', 'euclidean') and ('similar', 'pearson correlation')
+        such as ('dissimilar', 'euclidean') and ('similar', 'correlation')
     weight_normalization : bool
         If False, do nothing.
         If True, normalize weights to [0, 1].
@@ -72,7 +72,7 @@ def array2edge_list(array, weight_type=('dissimilar', 'euclidean'), weight_norma
             edge_data = [(max_dissimilar-dist)/(max_dissimilar-min_dissimilar) for dist in edge_data]
 
     elif weight_type[0] == 'similar':
-        if weight_type[1] == 'pearson correlation':
+        if weight_type[1] == 'correlation':
             edge_data = [pearsonr(array[i], array[j])[0] for i, j in zip(row_ind, col_ind)]
         elif weight_type[1] == 'mean':
             edge_data = [np.mean(array[[i, j]]) for i, j in zip(row_ind, col_ind)]
@@ -101,7 +101,7 @@ def array2adjacent_matrix(array, weight_type=('dissimilar', 'euclidean'), weight
         M is the length of each vertex's signal.
     weight_type : (str1, str2)
         The rule used for calculating weights
-        such as ('dissimilar', 'euclidean') and ('similar', 'pearson correlation')
+        such as ('dissimilar', 'euclidean') and ('similar', 'correlation')
     weight_normalization : bool
         If False, do nothing.
         If True, normalize weights to [0, 1].

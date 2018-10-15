@@ -1,6 +1,9 @@
 import numpy as np
 
+from scipy.spatial.distance import cdist, pdist
 
+
+# --------metrics--------
 def _overlap(c1, c2, index='dice'):
     """
     Calculate overlap between two collections
@@ -69,3 +72,66 @@ def calc_overlap(data1, data2, label1=None, label2=None, index='dice'):
     overlap = _overlap(data1, data2, index)
 
     return overlap
+
+
+def elbow_score(X, labels, metric='euclidean', type=('inner', 'centroid')):
+    """
+    calculate elbow score for a partition specified by labels
+    https://en.wikipedia.org/wiki/Elbow_method_(clustering)
+
+    :param X: array, shape = (n_samples, n_features)
+        a feature array
+    :param labels: array, shape = (n_samples,)
+        Predicted labels for each sample.
+    :param metric: string
+        Specify how to calculate distance between samples in a feature array.
+        Options: 'euclidean', 'correlation'
+    :param type: tuple of two strings
+        Options:
+        ('inner', 'centroid') - For each cluster, calculate the metric between samples within it
+                                with the cluster's centroid. Finally, average all samples.
+        ('inner', 'pairwise') - For each cluster, calculate the metric pairwise among samples within it.
+                                Finally, average all samples.
+        ('inter', 'centroid') - Calculate the metric between cluster centroids with their centroid.
+                                Finally, average all clusters.
+        ('inter', 'pairwise') - Calculate the metric pairwise among cluster centroids.
+                                Finally, average all clusters.
+
+    :return: score:
+        elbow score of the partition
+    """
+    if type == ('inner', 'centroid'):
+        # https://stackoverflow.com/questions/19197715/scikit-learn-k-means-elbow-criterion
+        # formula-1 in (Goutte, Toft et al. 1999 - NeuroImage)
+        sub_scores = []
+        for label in set(labels):
+            sub_samples = np.atleast_2d(X[labels == label])
+            sub_samples_centroid = np.atleast_2d(np.mean(sub_samples, 0))
+            tmp_scores = cdist(sub_samples_centroid, sub_samples, metric=metric)[0]
+            sub_scores.extend(tmp_scores)
+        score = np.mean(sub_scores)
+    elif type == ('inner', 'pairwise'):
+        sub_scores = []
+        for label in set(labels):
+            sub_samples = np.atleast_2d(X[labels == label])
+            sub_scores.extend(pdist(sub_samples, metric=metric))
+        score = np.mean(sub_scores)
+    elif type == ('inter', 'centroid'):
+        # adapted from formula-2 in (Goutte, Toft et al. 1999 - NeuroImage)
+        sub_centroids = []
+        for label in set(labels):
+            sub_samples = np.atleast_2d(X[labels == label])
+            sub_centroids.append(np.mean(sub_samples, 0))
+        centroid = np.atleast_2d(np.mean(sub_centroids, 0))
+        tmp_scores = cdist(centroid, np.array(sub_centroids), metric=metric)[0]
+        score = np.mean(tmp_scores)
+    elif type == ('inter', 'pairwise'):
+        sub_centroids = []
+        for label in set(labels):
+            sub_samples = np.atleast_2d(X[labels == label])
+            sub_centroids.append(np.mean(sub_samples, 0))
+        score = np.mean(pdist(np.array(sub_centroids), metric=metric))
+    else:
+        raise TypeError('Type-{} is not supported at present.'.format(type))
+
+    return score
