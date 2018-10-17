@@ -45,6 +45,36 @@ def auto_bar_width(x, item_num=1):
     return width
 
 
+def imshow(X, xlabel='', ylabel='', cmap=None, cbar_label=None,
+           xticklabels=None, yticklabels=None, output=None):
+    """
+    https://matplotlib.org/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
+    """
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(X, cmap=cmap)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    if cbar_label is not None:
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.ax.set_ylabel(cbar_label, rotation=-90, va="bottom")
+
+    if xticklabels is not None:
+        ax.set_xticks(np.arange(X.shape[1]))
+        ax.set_xticklabels(xticklabels)
+        plt.setp(ax.get_xticklabels(), rotation=-90, ha='left', rotation_mode='anchor')
+
+    if yticklabels is not None:
+        ax.set_yticks(np.arange(X.shape[0]))
+        ax.set_yticklabels(yticklabels)
+
+    fig.tight_layout()
+
+    if output is not None:
+        plt.savefig(output)
+
+
 class VlineMover(object):
     """
     Move the vertical line when left button is clicked.
