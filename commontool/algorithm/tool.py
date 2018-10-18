@@ -74,7 +74,7 @@ def calc_overlap(data1, data2, label1=None, label2=None, index='dice'):
     return overlap
 
 
-def elbow_score(X, labels, metric='euclidean', type=('inner', 'centroid')):
+def elbow_score(X, labels, metric='euclidean', type=('inner', 'standard')):
     """
     calculate elbow score for a partition specified by labels
     https://en.wikipedia.org/wiki/Elbow_method_(clustering)
@@ -88,6 +88,7 @@ def elbow_score(X, labels, metric='euclidean', type=('inner', 'centroid')):
         Options: 'euclidean', 'correlation'
     :param type: tuple of two strings
         Options:
+        ('inner', 'standard') - Implement Wk in (Tibshirani et al., 2001b)
         ('inner', 'centroid') - For each cluster, calculate the metric between samples within it
                                 with the cluster's centroid. Finally, average all samples.
         ('inner', 'pairwise') - For each cluster, calculate the metric pairwise among samples within it.
@@ -100,7 +101,14 @@ def elbow_score(X, labels, metric='euclidean', type=('inner', 'centroid')):
     :return: score:
         elbow score of the partition
     """
-    if type == ('inner', 'centroid'):
+    if type == ('inner', 'standard'):
+        score = 0
+        for label in set(labels):
+            sub_samples = np.atleast_2d(X[labels == label])
+            dists = cdist(sub_samples, sub_samples, metric=metric)
+            tmp_score = np.sum(dists) / (2.0 * sub_samples.shape[0])
+            score += tmp_score
+    elif type == ('inner', 'centroid'):
         # https://stackoverflow.com/questions/19197715/scikit-learn-k-means-elbow-criterion
         # formula-1 in (Goutte, Toft et al. 1999 - NeuroImage)
         sub_scores = []
