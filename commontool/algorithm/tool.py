@@ -130,7 +130,10 @@ def elbow_score(X, labels, metric='euclidean', type=('inner', 'centroid')):
         for label in set(labels):
             sub_samples = np.atleast_2d(X[labels == label])
             sub_centroids.append(np.mean(sub_samples, 0))
-        score = np.mean(pdist(np.array(sub_centroids), metric=metric))
+        sub_centroids = np.array(sub_centroids)
+        if sub_centroids.shape[0] == 1:
+            sub_centroids = np.r_[sub_centroids, sub_centroids]
+        score = np.mean(pdist(sub_centroids, metric=metric))
     else:
         raise TypeError('Type-{} is not supported at present.'.format(type))
 
