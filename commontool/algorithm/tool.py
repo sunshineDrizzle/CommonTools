@@ -135,3 +135,27 @@ def elbow_score(X, labels, metric='euclidean', type=('inner', 'centroid')):
         raise TypeError('Type-{} is not supported at present.'.format(type))
 
     return score
+
+
+# --------sampling--------
+def uniform_box_sampling(n_sample, bounding_box=((0,), (1,))):
+    """
+    create n_sample samples with uniform distribution in the box
+    https://blog.csdn.net/baidu_17640849/article/details/70769555
+    https://datasciencelab.wordpress.com/tag/gap-statistic/
+
+    :param n_sample: integer
+        the number of samples
+    :param bounding_box: array-like, shape = (2, n_dim)
+        Shape[1] is the number of dimensions.
+        Bounding_box[0] are n_dim minimums of their own dimensions.
+        Bounding_box[1] are n_dim maximums of their own dimensions.
+
+    :return: samples: array, shape = (n_sample, n_dim)
+    """
+    bounding_box = np.array(bounding_box)
+    dists = np.diag(bounding_box[1] - bounding_box[0])
+    samples = np.random.random_sample((n_sample, bounding_box.shape[1]))
+    samples = np.matmul(samples, dists) + bounding_box[0]
+
+    return samples
