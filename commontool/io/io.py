@@ -316,3 +316,29 @@ class CsvReader(object):
             raise ValueError('axis must be 0 or 1')
 
         return csv_dict
+
+
+def save2label(fpath, vertices, hemi_coords=None):
+    """
+    save labeled vertices to a text file
+
+    Parameters
+    ----------
+    fpath : string
+        The file path to output
+    vertices : 1-D array_like sequence
+        labeled vertices
+    hemi_coords : numpy array
+        If not None, it means that saving vertices as the freesurfer style.
+    """
+    header = str(len(vertices))
+    vertices = np.array(vertices)
+    if hemi_coords is None:
+        np.savetxt(fpath, vertices, fmt='%d', header=header,
+                   comments="#!ascii, label vertexes\n")
+    else:
+        coords = hemi_coords[vertices]
+        unknow = np.zeros_like(vertices, np.float16)
+        X = np.c_[vertices, coords, unknow]
+        np.savetxt(fpath, X, fmt=['%d', '%f', '%f', '%f', '%f'],
+                   header=header, comments="#!ascii, label vertexes\n")
