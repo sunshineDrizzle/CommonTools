@@ -102,14 +102,22 @@ class CiftiReader(object):
             specify which brain structure's data should be extracted
             If None, get all structures, meanwhile ignore parameter 'zeroize'.
         zeroize: bool
-            If true, get data after filling zeros for the missing vertices.
+            If true, get data after filling zeros for the missing vertices/voxels.
 
         Return:
         ------
         data: numpy array
-            If zeroize is False, the data is (maps, values).
-            If zeroize is True and brain model type is SURFACE, the data is (maps, values) with filled zeros.
-            If zeroize is True and brain model type is VOXELS, the data is (maps, volumes) with filled zeros.
+            If zeroize doesn't take effect, the data's shape is (map_num, index_num).
+            If zeroize takes effect and brain model type is SURFACE, the data's shape is (map_num, vertex_num).
+            If zeroize takes effect and brain model type is VOXELS, the data's shape is (map_num, i_max, j_max, k_max).
+        map_shape: tuple
+            the shape of the map.
+            If brain model type is SURFACE, the shape is (vertex_num,).
+            If brain model type is VOXELS, the shape is (i_max, j_max, k_max).
+            Only returned when 'structure' is not None and zeroize is False.
+        index2v: list
+            index2v[cifti_data_index] == map_vertex/map_voxel
+            Only returned when 'structure' is not None and zeroize is False.
         """
 
         _data = np.array(self.full_data.get_data())
@@ -132,12 +140,20 @@ class CiftiReader(object):
                     data[:, data_ijk[:, 0], data_ijk[:, 1], data_ijk[:, 2]] = _data[:, offset:offset+count]
                 else:
                     raise RuntimeError("The function can't support the brain model: {}".format(brain_model.model_type))
+                return data
             else:
-                data = _data[:, offset:offset+count]
+                if brain_model.model_type == 'CIFTI_MODEL_TYPE_SURFACE':
+                    map_shape = (brain_model.surface_number_of_vertices,)
+                    index2v = list(brain_model.vertex_indices)
+                elif brain_model.model_type == 'CIFTI_MODEL_TYPE_VOXELS':
+                    # This function have not been verified visually.
+                    map_shape = self.header.get_index_map(1).volume.volume_dimensions
+                    index2v = list(brain_model.voxel_indices_ijk)
+                else:
+                    raise RuntimeError("The function can't support the brain model: {}".format(brain_model.model_type))
+                return _data[:, offset:offset+count], map_shape, index2v
         else:
-            data = _data
-
-        return data
+            return _data
 
 
 def save2cifti(file_path, data, brain_models, map_names=None, volume=None, label_tables=None):
