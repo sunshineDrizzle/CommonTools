@@ -112,6 +112,7 @@ def plot_mean_sem(mean_sem_files, items=None, sample_names=None, xlabel='', ylab
     ax.set_ylabel(ylabel)
     plt.setp(ax.get_xticklabels(), rotation=-90, ha='left', rotation_mode='anchor')
 
+    plt.tight_layout()
     return fig, ax
 
 
@@ -160,4 +161,5 @@ def plot_compare(ps, sample_names, ts=None, title=''):
         ax_twin.tick_params('y', colors='b')
         return fig, ax, ax_twin
 
+    plt.tight_layout()
     return fig, ax
