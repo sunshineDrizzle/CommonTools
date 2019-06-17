@@ -34,7 +34,7 @@ def test_box_sampling():
     plt.show()
 
 
-def test_gap_statistic():
+def test_gap_statistic1():
     from commontool.algorithm.tool import gap_statistic, uniform_box_sampling
     from matplotlib.patches import Rectangle
 
@@ -88,5 +88,60 @@ def test_gap_statistic():
     plt.xlabel('#cluster')
     plt.ylabel('gap statistic')
     plt.xticks(x, cluster_nums)
+
+    plt.show()
+
+
+def test_gap_statistic2():
+    from commontool.algorithm.tool import gap_statistic
+    from commontool.algorithm.cluster import hac_scipy
+
+    cluster1_x = np.random.normal(2, 0.2, 100)
+    cluster1_y = np.random.normal(1, 0.2, 100)
+    cluster1 = np.c_[cluster1_x, cluster1_y]
+    cluster2_x = np.random.normal(3, 0.2, 100)
+    cluster2_y = np.random.normal(3, 0.2, 100)
+    cluster2 = np.c_[cluster2_x, cluster2_y]
+    cluster3_x = np.random.normal(5, 0.2, 100)
+    cluster3_y = np.random.normal(1, 0.2, 100)
+    cluster3 = np.c_[cluster3_x, cluster3_y]
+    data = np.r_[cluster1, cluster2, cluster3]
+
+    cluster_nums = range(1, 11)
+    labels_list, y, Wks_refs_log_mean, gaps, s, k_selected = gap_statistic(data, cluster_nums, cluster_method=hac_scipy)
+
+    fig, ax = plt.subplots()
+    ax.set_xlim([0, 6])
+    ax.set_ylim([0, 5])
+    ax.scatter(data[:, 0], data[:, 1], c='k')
+    fig.tight_layout()
+
+    x = np.arange(len(cluster_nums))
+    plt.figure()
+    plt.plot(x, y, 'k.-')
+    plt.xlabel('k')
+    plt.ylabel('W\u2096')
+    plt.xticks(x, cluster_nums)
+    plt.tight_layout()
+
+    x1 = x[:-1]
+    y1 = [y[i] - y[i + 1] for i in x1]
+    fig1, ax1 = plt.subplots()
+    ax1.plot(x1, y1, 'k.-')
+    ax1.set_xlabel('k')
+    ax1.set_ylabel('V\u2096')
+    ax1.set_xticks(x1)
+    ax1.set_xticklabels(cluster_nums[1:])
+    fig1.tight_layout()
+
+    x2 = x1[:-1]
+    y2 = [y1[i] - y1[i + 1] for i in x2]
+    fig2, ax2 = plt.subplots()
+    ax2.plot(x2, y2, 'k.-')
+    ax2.set_xlabel('k')
+    ax2.set_ylabel('-\u25b3V\u2096')
+    ax2.set_xticks(x2)
+    ax2.set_xticklabels(cluster_nums[1:-1])
+    fig2.tight_layout()
 
     plt.show()
