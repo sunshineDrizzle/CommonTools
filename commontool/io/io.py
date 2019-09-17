@@ -1,3 +1,4 @@
+import cv2
 import nibabel as nib
 import numpy as np
 
@@ -332,6 +333,46 @@ class CsvReader(object):
             raise ValueError('axis must be 0 or 1')
 
         return csv_dict
+
+
+class VideoReader:
+    """
+    read video data
+    """
+    def __init__(self, vid_file, skip=0, interval=1):
+        """
+        Parameters:
+        -----------
+        vid_file[str]: video data file
+        skip[float]: skip 'skip' seconds at the start of the video
+        interval[int]: get one frame per 'interval' frames
+        """
+        assert skip >= 0, "Parameter 'skip' must be a nonnegtive value!"
+        assert isinstance(interval, int) and interval > 0, "Parameter 'interval' must be a positive integer!"
+        self.vid_cap = cv2.VideoCapture(vid_file)
+        self.skip = skip
+        self.interval = interval
+
+        self.fps = int(self.vid_cap.get(cv2.CAP_PROP_FPS))
+        self.n_frame = int(self.vid_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.init = int(self.skip * self.fps)  # the first frame's index
+
+    def __getitem__(self, idx):
+        # process index range
+        assert isinstance(idx, int), 'Index must be a integer!'
+        if idx >= self.__len__() or idx < -self.__len__():
+            raise IndexError('index out of range')
+        if idx < 0:
+            idx = self.__len__() + idx
+
+        frame_idx = self.init + idx * self.interval
+        self.vid_cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+        _, frame = self.vid_cap.read()
+        return frame
+
+    def __len__(self):
+        length = (self.n_frame - self.init) / self.interval
+        return int(np.ceil(length))
 
 
 def save2label(fpath, vertices, hemi_coords=None):
