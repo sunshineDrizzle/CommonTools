@@ -40,6 +40,7 @@ def show_triangular_mesh(x, y, z, triangles, scalars,
     mode[str]: show or return
         If is 'show', just show the figure.
         If is 'return', return screen shot and close the figure.
+        Else, regard as the output path of the figure.
     kwargs: reference to doc of mlab.triangular_mesh
 
     Return:
