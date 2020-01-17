@@ -4,7 +4,7 @@ from mayavi import mlab
 
 
 def show_triangular_mesh(x, y, z, triangles, scalars,
-                         vmin=None, vmax=None, colormap='jet',
+                         vmin=None, vmax=None, colormap='jet', lut=None,
                          bgcolor=(1, 1, 1), fgcolor=(0, 0, 0), size=(400, 350),
                          azimuth=-48, elevation=142, distance=422, focalpoint=(33, -17, 16), roll=-84,
                          cbar_orientation=None, cbar_position=None, cbar_position2=None, cbar_label_fmt=None,
@@ -31,6 +31,8 @@ def show_triangular_mesh(x, y, z, triangles, scalars,
     colormap[str|list]: the color map method
         If is list, one-by-one corresponding to the rows of scalars.
         Else, applied to all overlays.
+    lut[ndarray|list]: lookup table of color with shape as (n_color, 4)
+        If is not None, ignore 'colormap'
     bgcolor[seq]: the rgb color of background.
     fgcolor[seq]: the rgb color of foreground.
     size[seq]: size of figure (width x height)
@@ -89,10 +91,15 @@ def show_triangular_mesh(x, y, z, triangles, scalars,
     else:
         assert len(colormap) == n_overlay
 
-    bottom_flag = True
+    # transform LUT
+    if not isinstance(lut, list):
+        lut = [lut] * n_overlay
+    else:
+        assert len(lut) == n_overlay
+
     fig = mlab.figure(bgcolor=bgcolor, fgcolor=fgcolor, size=size)
-    for idx, data in enumerate(zip(scalars, vmin, vmax, colormap), 1):
-        s, vi, va, cm = data
+    for idx, data in enumerate(zip(scalars, vmin, vmax, colormap, lut), 1):
+        s, vi, va, cm, lut_i = data
         if vi is None:
             vi = np.min(s)
         if va is None:
@@ -101,12 +108,13 @@ def show_triangular_mesh(x, y, z, triangles, scalars,
                                     vmin=vi, vmax=va, colormap=cm, **kwargs)
 
         # fix the color of the smallest scalar
-        lut = np.array(surf.module_manager.scalar_lut_manager.lut.table)
-        if idx == 1:
-            lut[0, :3] = 127.5
-        else:
-            lut[0, 3] = 0
-        surf.module_manager.scalar_lut_manager.lut.table = lut
+        if lut_i is None:
+            lut_i = np.array(surf.module_manager.scalar_lut_manager.lut.table)
+            if idx == 1:
+                lut_i[0, :3] = 127.5
+            else:
+                lut_i[0, 3] = 0
+        surf.module_manager.scalar_lut_manager.lut.table = lut_i
 
         if idx == cbar_num:
             # create color bar
