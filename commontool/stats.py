@@ -16,7 +16,35 @@ class ANOVA:
     References:
     ----------
     1. http://www.pybloggers.com/2016/03/three-ways-to-do-a-two-way-anova-with-python/
+    2. https://pythonfordatascience.org/anova-2-way-n-way/
+    3. https://www.marsja.se/four-ways-to-conduct-one-way-anovas-using-python/
     """
+    def one_way(self, data, dep_var, factor):
+        """
+        one-way ANOVA
+
+        Parameters:
+        ----------
+        data: DataFrame
+            Contains at least 2 columns that are 'dependent variable' and 'factor' respectively.
+        dep_var: str
+            Name of the 'dependent variable' column.
+        factor: str
+            Name of the 'factor' column.
+
+        Return:
+        aov_table: DataFrame
+            ANOVA table
+        """
+        formula = '{} ~ {}'.format(dep_var, factor)
+        print('formula:', formula)
+        model = ols(formula, data).fit()
+        aov_table = anova_lm(model, typ=2)
+        self.eta_squared(aov_table)
+        self.omega_squared(aov_table)
+
+        return aov_table
+
     def two_way(self, data, dep_var, factor1, factor2):
         """
         two-way ANOVA
