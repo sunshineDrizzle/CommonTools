@@ -1,5 +1,5 @@
 from statsmodels.formula.api import ols
-from statsmodels.stats.anova import anova_lm
+from statsmodels.stats.anova import anova_lm, AnovaRM
 
 
 class ANOVA:
@@ -18,6 +18,8 @@ class ANOVA:
     1. http://www.pybloggers.com/2016/03/three-ways-to-do-a-two-way-anova-with-python/
     2. https://pythonfordatascience.org/anova-2-way-n-way/
     3. https://www.marsja.se/four-ways-to-conduct-one-way-anovas-using-python/
+    4. http://www.pybloggers.com/2018/10/repeated-measures-anova-in-python-using-statsmodels/
+    5. https://www.marsja.se/repeated-measures-anova-in-python-using-statsmodels/
     """
     def one_way(self, data, dep_var, factor):
         """
@@ -33,6 +35,7 @@ class ANOVA:
             Name of the 'factor' column.
 
         Return:
+        ------
         aov_table: DataFrame
             ANOVA table
         """
@@ -61,6 +64,7 @@ class ANOVA:
             Name of the 'factor2' column.
 
         Return:
+        ------
         aov_table: DataFrame
             ANOVA table
         """
@@ -70,6 +74,31 @@ class ANOVA:
         aov_table = anova_lm(model, typ=2)
         self.eta_squared(aov_table)
         self.omega_squared(aov_table)
+
+        return aov_table
+
+    def rm(self, data, dep_var, subject, within, aggregate_func=None):
+        """
+        Repeated Measures ANOVA
+
+        Parameters:
+        ----------
+        data: DataFrame
+            Contains at least 3 columns that are 'dependent variable', 'subject', and 'factor' respectively.
+        dep_var: str
+            Name of the 'dependent variable' column.
+        subject: str
+            Name of the 'subject' column. (subject identifier)
+        within: a list of strings
+            Names of the at least one 'factor' columns.
+
+        Return:
+        ------
+        aov_table: DataFrame
+            ANOVA table
+        """
+        aov_rm = AnovaRM(data, dep_var, subject, within, aggregate_func=aggregate_func)
+        aov_table = aov_rm.fit().anova_table
 
         return aov_table
 

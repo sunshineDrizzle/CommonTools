@@ -45,3 +45,19 @@ class TestANOVA:
         np.testing.assert_almost_equal(np.asarray(aov_tabel['PR(>F)'][:3]), PR, 6)
         np.testing.assert_almost_equal(np.asarray(aov_tabel['eta_sq'][:3]), eta_sq, 6)
         np.testing.assert_almost_equal(np.asarray(aov_tabel['omega_sq'][:3]), omega_sq, 6)
+
+    def test_rm(self):
+        # ground truth
+        F = 499.154857
+        num_df = 1
+        den_df = 59
+        PR = 1.774052e-30
+
+        # test
+        data = pd.read_csv('../data/rmAOV1way.csv')
+        anova = ct_stats.ANOVA()
+        aov_tabel = anova.rm(data, 'rt', 'Sub_id', ['cond'])
+        np.testing.assert_almost_equal(aov_tabel.loc['cond', 'F Value'], F, 6)
+        assert num_df == aov_tabel.loc['cond', 'Num DF']
+        assert den_df == aov_tabel.loc['cond', 'Den DF']
+        np.testing.assert_almost_equal(aov_tabel.loc['cond', 'Pr > F'], PR, 6)
