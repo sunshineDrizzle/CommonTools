@@ -61,3 +61,17 @@ class TestANOVA:
         assert num_df == aov_tabel.loc['cond', 'Num DF']
         assert den_df == aov_tabel.loc['cond', 'Den DF']
         np.testing.assert_almost_equal(aov_tabel.loc['cond', 'Pr > F'], PR, 6)
+
+
+class TestEffectSize:
+
+    def test_cohen_d(self):
+        # prepare data
+        sample1 = [2, 4, 7, 3, 7, 35, 8, 9]
+        sample2 = [i * 2 for i in sample1]
+        d_true = -0.5567679522645598
+
+        # test
+        es = ct_stats.EffectSize()
+        d = es.cohen_d(sample1, sample2)
+        assert d == d_true

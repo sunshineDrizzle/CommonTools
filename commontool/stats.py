@@ -1,3 +1,5 @@
+import numpy as np
+
 from statsmodels.formula.api import ols
 from statsmodels.stats.anova import anova_lm, AnovaRM
 
@@ -114,3 +116,43 @@ class ANOVA:
         aov['omega_sq'] = 'NaN'
         aov['omega_sq'] = (aov[:-1]['sum_sq'] - (aov[:-1]['df'] * mse)) / (sum(aov['sum_sq']) + mse)
         return aov
+
+
+class EffectSize:
+
+    def cohen_d(self, sample1, sample2):
+        """
+        Calculate Cohen's d.
+
+        Parameters:
+        ----------
+        sample1: array-like with one dimension
+        sample2: array-like with one dimension
+
+        Return:
+        ------
+        d: float
+            the value of the Cohen's d between sample1 and sample2
+
+        References:
+        ----------
+        1. https://machinelearningmastery.com/effect-size-measures-in-python/
+        2. https://www.statisticshowto.datasciencecentral.com/cohens-d/
+        3. https://stackoverflow.com/questions/21532471/how-to-calculate-cohens-d-in-python
+        """
+        # calculate the size of samples
+        n1, n2 = len(sample1), len(sample2)
+
+        # calculate the variance of the samples
+        # the divisor used in the calculation is n1, n2 respectively.
+        v1, v2 = np.var(sample1), np.var(sample2)
+
+        # calculate the pooled standard deviation
+        s = np.sqrt((n1 * v1 + n2 * v2) / (n1 + n2 - 2))
+
+        # calculate the means of the samples
+        u1, u2 = np.mean(sample1), np.mean(sample2)
+
+        # calculate the effect size
+        d = (u1 - u2) / s
+        return d
