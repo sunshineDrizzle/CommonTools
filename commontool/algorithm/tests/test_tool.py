@@ -1,6 +1,7 @@
 import numpy as np
 
 from matplotlib import pyplot as plt
+from commontool.algorithm import tool as ct_tool
 
 
 def test_calc_overlap():
@@ -13,6 +14,16 @@ def test_calc_overlap():
     array1 = np.array([1, 2, 3, 2])
     array2 = np.array([4, 5, 6, 4])
     print(calc_overlap(array1, array2, 2, 4))
+
+
+def test_loocv_overlap():
+    X = np.array([
+        [1, 0, 1, 1],
+        [0, 0, 1, 1],
+        [1, 0, 1, 0]], dtype=np.bool)
+    prob = 0.3
+    overlaps_test = ct_tool.loocv_overlap(X, prob, metric='dice')
+    np.testing.assert_equal([1, 0.8, 0.8], overlaps_test)
 
 
 def test_box_sampling():

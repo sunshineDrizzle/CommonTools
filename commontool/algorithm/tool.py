@@ -74,6 +74,50 @@ def calc_overlap(data1, data2, label1=None, label2=None, index='dice'):
     return overlap
 
 
+def loocv_overlap(X, prob, metric='dice'):
+    """
+    Calculate overlaps for leave-one-out cross validation.
+    Each sample has its own region of interest (ROI). For each iteration,
+    overlap between the ROI in the left sample and the ROI in remaining samples
+    will be calculated. The ROI in remaining samples is defined as below:
+        Calculate probability map for the remaining samples, regard locations whose
+        probability is suprathreshold as the ROI.
+
+    Parameters:
+    ----------
+    X[ndarray]: shape=(n_sample, n_location)
+        Its data type must be bool. Each row is a sample.
+        Each sample's region of interest consists of the locations with True values.
+    prob[float]: the threshold probability
+    metric[str]: string ('dice' | 'percent')
+        Specify a metric which is used to measure overlap.
+
+    Return:
+    ------
+    overlaps[ndarray]: shape=(n_sample,)
+    """
+    assert X.ndim == 2, 'The input X must be a 2D array!'
+    assert X.dtype == np.bool, "The input X's data type must be bool!"
+    n_samp, _ = X.shape
+
+    remain_idx_arr = np.ones((n_samp,), dtype=np.bool)
+    overlaps = np.zeros((n_samp,))
+    for left_idx in range(n_samp):
+        # get roi of the left sample
+        roi_left = np.where(X[left_idx])[0]
+
+        # get roi of the remaining samples
+        remain_idx_arr[left_idx] = False
+        prob_map = np.mean(X[remain_idx_arr], 0)
+        roi_remain = np.where(prob_map > prob)[0]
+        remain_idx_arr[left_idx] = True
+
+        # calculate overlap
+        overlaps[left_idx] = calc_overlap(roi_left, roi_remain, index=metric)
+
+    return overlaps
+
+
 def elbow_score(X, labels, metric='euclidean', type=('inner', 'standard')):
     """
     calculate elbow score for a partition specified by labels
