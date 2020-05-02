@@ -20,6 +20,34 @@ class CiftiReader(object):
         return [_.brain_structure for _ in self.header.get_index_map(1).brain_models]
 
     @property
+    def label_info(self):
+        """
+        Get label information from label tables
+
+        Return:
+        ------
+        label_info[list]:
+            Each element is a dict about corresponding map's label information.
+            Each dict's content is shown as below:
+                key[list]: a list of integers which are data values of the map
+                label[list]: a list of label names
+                rgba[ndarray]: shape=(n_label, 4)
+                    The four elements in the second dimension are
+                    red, green, blue, and alpha color components for label (between 0 and 1).
+        """
+        label_info = []
+        for named_map in self.header.get_index_map(0).named_maps:
+            label_dict = {'key': [], 'label': [], 'rgba': []}
+            for k, v in named_map.label_table.items():
+                label_dict['key'].append(k)
+                label_dict['label'].append(v.label)
+                label_dict['rgba'].append(v.rgba)
+            label_dict['rgba'] = np.asarray(label_dict['rgba'])
+            label_info.append(label_dict)
+
+        return label_info
+
+    @property
     def volume(self):
         return self.header.get_index_map(1).volume
 
@@ -189,6 +217,13 @@ def save2cifti(file_path, data, brain_models, map_names=None, volume=None, label
         Cifti2Lable is a specification of the label, including rgba, label name and label number.
         If your data is a label data, it would be useful.
     """
+    if file_path.endswith('.dlabel.nii'):
+        assert label_tables is not None
+        idx_type0 = 'CIFTI_INDEX_TYPE_LABELS'
+    elif file_path.endswith('.dscalar.nii'):
+        idx_type0 = 'CIFTI_INDEX_TYPE_SCALARS'
+    else:
+        raise TypeError('Unsupported File Format')
 
     if map_names is None:
         map_names = [None] * data.shape[0]
@@ -203,7 +238,7 @@ def save2cifti(file_path, data, brain_models, map_names=None, volume=None, label
     # CIFTI_INDEX_TYPE_SCALARS always corresponds to Cifti2Image.header.get_index_map(0),
     # and this index_map always contains some scalar information, such as named_maps.
     # We can get label_table and map_name and metadata from named_map.
-    mat_idx_map0 = cifti2.Cifti2MatrixIndicesMap([0], 'CIFTI_INDEX_TYPE_SCALARS')
+    mat_idx_map0 = cifti2.Cifti2MatrixIndicesMap([0], idx_type0)
     for mn, lbt in zip(map_names, label_tables):
         named_map = cifti2.Cifti2NamedMap(mn, label_table=lbt)
         mat_idx_map0.append(named_map)

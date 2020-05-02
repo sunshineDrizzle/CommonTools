@@ -1,9 +1,31 @@
 import numpy as np
 
+from commontool.io import io as ct_io
 from commontool.io.io import CiftiReader, save2cifti, CsvReader
 
 
-def test_cifti_io():
+class TestCiftiReader:
+
+    def test_get_data(self):
+        reader = ct_io.CiftiReader('../data/test.dlabel.nii')
+        assert reader.get_data().shape == (1, 59412)
+        assert reader.get_data('CIFTI_STRUCTURE_CORTEX_LEFT', True)[0, 0] == 1
+        assert reader.get_data('CIFTI_STRUCTURE_CORTEX_RIGHT', True)[0, 0] == 1
+
+    def test_label_info(self):
+        reader = ct_io.CiftiReader('../data/test.dlabel.nii')
+        label_info = reader.label_info
+        assert len(label_info) == 1
+        label_dict = label_info[0]
+        label_dict_true = {'key': [0, 1], 'label': ['None', 'test'],
+                           'rgba': np.array([[0, 0, 0, 0], [1, 0, 0, 0]])}
+        assert sorted(label_dict.keys()) == sorted(label_dict_true.keys())
+        assert label_dict['key'] == label_dict_true['key']
+        assert label_dict['label'] == label_dict_true['label']
+        assert np.all(label_dict['rgba'] == label_dict_true['rgba'])
+
+
+def cifti_io():
     reader1 = CiftiReader(r'E:\useful_things\data\HCP\HCP_S1200_GroupAvg_v1\HCP_S1200_GroupAvg_v1'
                           r'\HCP_S1200_997_tfMRI_ALLTASKS_level2_cohensd_hp200_s4_MSMAll.dscalar.nii')
 
@@ -19,7 +41,7 @@ def test_cifti_io():
     print(np.max(data1 - data2), np.min(data1 - data2))
 
 
-def test_merge_nifti2cifti():
+def merge_nifti2cifti():
     import nibabel as nib
 
     # get data
@@ -42,7 +64,7 @@ def test_merge_nifti2cifti():
                cifti_data, bm_lr, ['surface vcAtlas'])
 
 
-def test_csv_io():
+def csv_io():
     reader = CsvReader('../data/statistics.csv')
     dict0 = reader.to_dict(keys=['#subjects'])
     dict1 = reader.to_dict(1, keys=['2', '1'])
