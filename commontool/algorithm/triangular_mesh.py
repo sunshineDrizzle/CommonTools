@@ -311,3 +311,66 @@ def average_gradient(data, neighbors):
     for vtx in range(data.shape[0]):
         avg_gradient[vtx] = np.mean([abs(data[vtx] - data[neighbor]) for neighbor in neighbors[vtx]])
     return avg_gradient
+
+
+def label_edge_detection(data, faces, edge_type="inner", neighbors=None):
+    """
+    edge detection for labels
+
+    Parameters
+    ----------
+    data : 1-D numpy array
+        Each array index is corresponding to vertex id in the faces.
+        Each element is a label id.
+    faces : numpy array
+        the array of shape [n_triangles, 3]
+    edge_type : str
+        "inner" means inner edges of labels.
+        "outer" means outer edges of labels.
+        "both" means both of them in one array
+        "split" means returning inner and outer edges in two arrays respectively
+    neighbors : list
+        If this parameter is not None, a parameters ('faces') will be ignored.
+        It is used to save time when someone repeatedly uses the function with
+            a same neighbors which can be got by get_n_ring_neighbor.
+        The indices are vertices' id of a mesh.
+        One index's corresponding element is a collection of vertices which connect with the index.
+
+    Return
+    ------
+    inner_data : 1-D numpy array
+        the inner edges of the labels
+    outer_data : 1-D numpy array
+        the outer edges of the labels
+        It's worth noting that outer_data's element values may
+            be not strictly corresponding to labels' id when
+            there are some labels which are too close.
+    """
+    # data preparation
+    vertices = np.nonzero(data)[0]
+    inner_data = np.zeros_like(data)
+    outer_data = np.zeros_like(data)
+    if neighbors is None:
+        neighbors = get_n_ring_neighbor(faces)
+
+    # look for edges
+    for v_id in vertices:
+        neighbors_values = [data[_] for _ in neighbors[v_id]]
+        if min(neighbors_values) != max(neighbors_values):
+            if edge_type in ("inner", "both", "split"):
+                inner_data[v_id] = data[v_id]
+            if edge_type in ("outer", "both", "split"):
+                outer_vtx = [vtx for vtx in neighbors[v_id] if data[v_id] != data[vtx]]
+                outer_data[outer_vtx] = data[v_id]
+
+    # return results
+    if edge_type == "inner":
+        return inner_data
+    elif edge_type == "outer":
+        return outer_data
+    elif edge_type == "both":
+        return inner_data + outer_data
+    elif edge_type == "split":
+        return inner_data, outer_data
+    else:
+        raise ValueError("The argument 'edge_type' must be one of the (inner, outer, both, split)")
