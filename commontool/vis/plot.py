@@ -10,10 +10,14 @@ def polyfit_plot(x, y, deg, scoring='r'):
 
     Parameters
     ----------
-    x :
-    y :
-    deg :
-    scoring :
+    x : ndarray, shape (M,)
+        x-coordinates of the M sample points ``(x[i], y[i])``.
+    y : ndarray, shape (M,)
+        y-coordinates of the M sample points ``(x[i], y[i])``.
+    deg : int
+        Degree of the fitting polynomial
+    scoring : str
+        a method used to evaluate the fit effect
 
     References
     ----------
